@@ -1,5 +1,6 @@
 mod day0;
 mod day12;
+mod day16;
 mod day2;
 mod day5;
 mod day9;
@@ -38,6 +39,11 @@ async fn main() -> shuttle_axum::ShuttleAxum {
                 let shared_state = Arc::clone(&day12_state);
                 move |Path(op)| day12::game(shared_state, Path(op))
             }),
+        )
+        .route(
+            "/16/:op",
+            get(move |Path(op), headers| day16::unwrap(Path(op), headers))
+                .post(move |Path(op), body| day16::jwt(Path(op), body)),
         );
     Ok(router.into())
 }
