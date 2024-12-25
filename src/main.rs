@@ -3,6 +3,7 @@ mod day12;
 mod day16;
 mod day19;
 mod day2;
+mod day23;
 mod day5;
 mod day9;
 
@@ -14,6 +15,7 @@ use axum::{
 use shuttle_shared_db::Postgres;
 use sqlx::{migrate, PgPool};
 use std::sync::Arc;
+use tower_http::services::ServeDir;
 
 #[shuttle_runtime::main]
 async fn main(#[Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
@@ -26,6 +28,7 @@ async fn main(#[Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
         .expect("Failed to run migrations");
 
     let router = Router::new()
+        .nest_service("/assets", ServeDir::new("assets"))
         .route("/", get(day0::hello_bird))
         .route("/-1/seek", get(day0::seek))
         .route("/2/*v_op", get(day2::route))
@@ -71,6 +74,11 @@ async fn main(#[Postgres] pool: PgPool) -> shuttle_axum::ShuttleAxum {
                 let pool = pool.clone();
                 move |Path(op)| day19::delete_route(pool, Path(op))
             }),
+        )
+        .route(
+            "/23/*op",
+            get(move |Path(op)| day23::get_route(Path(op)))
+                .post(move |Path(op), body| day23::post_route(Path(op), body)),
         );
     Ok(router.into())
 }
